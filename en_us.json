@@ -1,0 +1,22 @@
+{
+  "about": "Made by Kuze_Hibiki @ The Chinese University of Hong Kong. Charts and data provided by this bot is for REFERENCE only. I apologize for any possible mistakes.",
+  "language_set": "Language changed to",
+  "version":"v0.1.1a 10/1/2026",
+  "True":"Yes",
+  "False":"No",
+  "ruinedtime":"This town is estimated to be ruined by ",
+  "mayortransfer":"The mayor of this town is estimated to be inactive in",
+  "player_not_found_ruin":"The player is not existed",
+  "Invalidinput":"The input is INVALID",
+  "res_title":"Player Info",
+  "res_player_name":"IGN:",
+  "res_uuid":"UUID:",
+  "res_bi_title":"Basic Info:",
+  "res_nation":"Nation:",
+  "res_town":"Town:",
+  "isOnline":"Online or not:",
+  "isKing":"King:",
+  "isMayor":"Mayor:",
+  "res_pvp_title":"PVP Tiers",
+  "no_tier":"No tier"
+}

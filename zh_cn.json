@@ -1,0 +1,22 @@
+{
+  "about": "Made by Kuze_Hibiki @ The Chinese University of Hong Kong。衷心感谢我国领导人ddngszx对本bot开发的大力支持,同时特别感谢nanamipolaris在开发中提供的宝贵建议。本bot提供的所有数据仅供参考,如有不实之处，敬请谅解",
+  "language_set": "切换语种至",
+  "version":"v0.1.1a 民国115年10月1日",
+  "True":"是",
+  "False":"否",
+  "ruinedtime":"该城的预计荒废时间: ",
+  "mayortransfer":"距离该城市长inactive还有",
+  "player_not_found_ruin":"玩家不存在",
+  "Invalidinput":"输入不合法",
+  "res_title":"玩家信息",
+  "res_player_name":"游戏昵称:",
+  "res_uuid":"全局唯一识别码:",
+  "res_bi_title":"基本信息:",
+  "res_nation":"所属国家:",
+  "res_town":"城镇:",
+  "isOnline":"是否在线:",
+  "isKing":"是否为国家领导人:",
+  "isMayor":"是否为市长:",
+  "res_pvp_title":"PVP信息",
+  "no_tier":"未查询到tier"
+}

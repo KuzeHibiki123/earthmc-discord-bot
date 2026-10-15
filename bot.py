@@ -24,6 +24,7 @@ bot=commands.Bot(command_prefix="!",intents=intents)
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Noto Sans CJK SC"]
 plt.rcParams["axes.unicode_minus"] = False
 API = "https://api.earthmc.net/v4"
+advance_func=0
 with open("language.json","r",encoding="utf-8") as f:
     userlang=json.load(f)
 with open("zh_cn.json","r",encoding="utf-8") as f:
@@ -303,7 +304,7 @@ async def gdp(ctx, nation_name: str):
     result = await collect_nation_wealth(nation_name)
     plot_result=await collect_nation_plots(nation_name)
     if result is None or plot_result is None:
-        await ctx.send("找不到该国家")
+        await ctx.send({lang(ctx,"Invalidinput")})
         return
     if result.get("error") == "no_residents":
         await ctx.send("该国没有居民")
@@ -315,7 +316,7 @@ async def gdp(ctx, nation_name: str):
     total_value=plot_result["total_value"]
     sumgdp=sum(town_wealth.values())+total_value
     if not town_wealth and not resident_wealth:
-        await ctx.send("没有可统计的财产数据")
+        await ctx.send({lang(ctx,"No_data_available")})
         return
 
     loop = asyncio.get_running_loop()
@@ -345,21 +346,21 @@ async def gdp(ctx, nation_name: str):
     )
 
     embed = discord.Embed(
-        title=f"{nation_name} 财产统计",
+        title=f"{nation_name} {lang(ctx,"GDP_fin_analysis")}",
         color=0x57F287,
         description=(
-                f"GDP总值: **{sumgdp}**\n"
-                f"区块总和 **{total_plots}**\n"
-                f"区块总价值 **{total_value}**\n"
+                f"{lang(ctx,"GDP")}: **{sumgdp}**\n"
+                f"{lang(ctx,"GDP_chunk_sum")} **{total_plots}**\n"
+                f"{lang(ctx,"GDP_chunkvalue_sum")} **{total_value}**\n"
     )
     )
     embed.add_field(
-        name="Top 5 城镇",
+        name=f"Top 5 {lang(ctx,"town")}:",
         value=town_lines or "无",
         inline=True,
     )
     embed.add_field(
-        name="Top 5 居民",
+        name=f"Top 5 {lang(ctx,"residents")}:",
         value=resident_lines or "无",
         inline=True,
     )
@@ -370,8 +371,11 @@ async def gdp(ctx, nation_name: str):
 #同步指令
 @bot.command()
 async def synccommands(ctx):
-    await bot.tree.sync()
-    await ctx.send("已同步")
+    if ctx.author.id==1047857758885650495:
+        await bot.tree.sync()
+        await ctx.send("已同步")
+    else:
+        PASS
 #功能部分
 @bot.hybrid_command(name="town",description="查询城镇资料")
 async def town(ctx,town_name:str):
@@ -385,7 +389,22 @@ async def town(ctx,town_name:str):
     nation_name = nation.get("name") if nation else "无"
     mayor=town_data.get("mayor")
     mayor_name=mayor.get("name")
-    await ctx.send(f"城镇名: {town_data['name']} 所属国家: {nation_name} 城主{mayor_name}")
+    status=town_data.get("status")
+    embed=discord.Embed(
+            title=lang(ctx,"town_title"),
+            description=(
+            f"**{lang(ctx, 'town_bi_title')}**　　　　　　　　**{lang(ctx, 'town_status')}**\n"
+            f"{lang(ctx, 'town_name')} **{town_name}**　　　　　　　　"
+            f"{lang(ctx, 'town_public')}**{TF(ctx, status.get('isPublic'))}**\n"
+            f"{lang(ctx, 'town_mayor_name')} **{mayor_name}**　　　　"
+            f"{lang(ctx, 'town_open')}**{TF(ctx, status.get('isOpen'))}**\n"
+            f"{lang(ctx, 'town_nation')} **{nation_name}**　　　　　　　"
+            f"{lang(ctx, 'town_oc')}**{TF(ctx, status.get('isOverClaimed'))}**\n"
+            f"Wiki:{town_data.get("wiki")}"
+        ),
+        ) 
+    embed.set_thumbnail(url=f"https://api.mcheads.org/avatar/{mayor_name}/left/256")
+    await ctx.send(embed=embed)
 @bot.hybrid_command(name="nation",description="查询国家资料")
 async def nation(ctx,a:str):
     resp = requests.post('https://api.earthmc.net/v4/nations', json={"query": a})
@@ -426,7 +445,7 @@ async def version(ctx):
     await ctx.send(lang(ctx,'version'))
 @bot.hybrid_command(name="ruin")
 async def ruin(ctx,town:str):
-    resp=requests.post('api.earthmc.net/v4/towns', json={"query": town})
+    resp=requests.post('https://api.earthmc.net/v4/towns', json={"query": town})
     data=resp.json()
     town_data=data[0]
     time_stamp=town_data.get("timestamps")
@@ -453,12 +472,15 @@ async def ruin(ctx,town:str):
     if days > 0:
         text = f"{41-days} day(s) {24-hours} hr(s)"
     else:
-        text = f"41 days {hours} hr(s)"
+        text = f"41 days {24-hours} hr(s)"
 
     await ctx.send(f"{lang(ctx, 'mayortransfer')} {text}")
-@bot.hybrid_command()
-async def about(ctx):
-     await ctx.send(lang(ctx, "about"))
+@bot.hybrid_command(name="status")
+async def status(ctx):
+    resp=requests.get('https://api.earthmc.net/v4/')
+    data1=resp.json()
+    data=data1[0]
+
 @bot.hybrid_command(name="res")
 async def res(ctx,player:str):
     resp = requests.post('https://api.earthmc.net/v4/players', json={"query": player})
@@ -516,6 +538,8 @@ async def res(ctx,player:str):
     isOnline=status.get("isOnline")
     isKing=status.get("isKing")
     isMayor=status.get("isMayor")
+    stats=emcdata.get("stats")
+    balance=stats.get("balance")
     embed=discord.Embed(
         title=lang(ctx,"res_title"),
         description=(
@@ -527,10 +551,45 @@ async def res(ctx,player:str):
         f"{lang(ctx,"isOnline")} **{TF(ctx,isOnline)}**\n"
         f"{lang(ctx,"isKing")} **{TF(ctx,isKing)}**\n"
         f"{lang(ctx,"isMayor")} **{TF(ctx,isMayor)}**\n"
+        f"{lang(ctx,"balance")} **{int(balance)}**\n"
         f"**{lang(ctx,"res_pvp_title")}**\n"
         f"{pvp_text}"
     ),
     ) 
-    embed.set_thumbnail(url=f"https://minotar.net/avatar/{player_name}/256")
+    embed.set_thumbnail(url=f"https://api.mcheads.org/avatar/{player_name}/left/256")
     await ctx.send(embed=embed)
+@bot.hybrid_command(name="advance")
+async def advance(ctx):
+    if ctx.author.id==1047857758885650495:
+        global advance_func
+        if  advance_func==0:
+            await ctx.send("进阶功能已启用")
+            advance_func=1
+        else:
+            await ctx.send("进阶功能已关闭")
+            advance_func=0
+    else:
+        await ctx.send("权限不足")
+@bot.hybrid_command(name="license")
+async def license(ctx):
+    await ctx.send(
+    "This software is copyright.\n"
+    "MIT License\n"
+    "Copyright (c) 2026 Kuze_Hibiki\n"
+    "Permission is hereby granted, free of charge, to any person obtaining a copy "
+    "of this software and associated documentation files (the \"Software\"), to deal "
+    "in the Software without restriction, including without limitation the rights "
+    "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell "
+    "copies of the Software, and to permit persons to whom the Software is "
+    "furnished to do so, subject to the following conditions:\n"
+    "The above copyright notice and this permission notice shall be included in all "
+    "copies or substantial portions of the Software.\n"
+    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR "
+    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, "
+    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE "
+    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER "
+    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, "
+    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE "
+    "SOFTWARE."
+)
 bot.run(token)
